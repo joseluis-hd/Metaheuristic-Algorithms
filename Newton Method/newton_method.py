@@ -13,7 +13,8 @@ from pathlib import Path
 mpl.rcParams["pdf.fonttype"] = 42
 mpl.rcParams["ps.fonttype"]  = 42
 
-def newton_optimize(fp, fpp, x0, tol = 1e-10, maxiter = 100) -> None:
+#Newton method to find roots of f'(x) = 0 using f''(x)
+def newton_fprime_root(fp, fpp, x0, tol = 1e-10, maxiter = 100) -> None:
     x = float(x0)
     for _ in range(maxiter):
         g, h = fp(x), fpp(x)
@@ -26,6 +27,7 @@ def newton_optimize(fp, fpp, x0, tol = 1e-10, maxiter = 100) -> None:
         x = x_new
     return x if abs(fp(x)) < 1e-6 else None
 
+# Remove duplicates and sort
 def unique_sorted(vals, tol = 1e-6) -> list:
     out = []
     for v in vals:
@@ -34,12 +36,14 @@ def unique_sorted(vals, tol = 1e-6) -> list:
             out.append(v)
     return out
 
-def newton_roots(fp, fpp, a, b, n_seeds = 601) -> list:
-    seeds = np.linspace(a, b, n_seeds)
-    roots = [newton_optimize(fp, fpp, s) for s in seeds]
+#Find all roots of f'(x) = 0 in [a,b] using Newton method with n_points initial points
+def newton_roots(fp, fpp, a, b, n_points = 601) -> list: #601 is a safe choice for 600 intervals
+    points = np.linspace(a, b, n_points)
+    roots = [newton_fprime_root(fp, fpp, s) for s in points]
     roots = sorted(r for r in roots if r is not None and a-1e-6 <= r <= b+1e-6)
     return unique_sorted(roots, tol=1e-6)
 
+#Plotting function
 def plot_case(funcion, funcionPrima, funcionPrima2, a, b, title, legend_labels, basename) -> None:
     x = np.linspace(a, b, 2000)
 
@@ -60,6 +64,8 @@ def plot_case(funcion, funcionPrima, funcionPrima2, a, b, title, legend_labels, 
     plt.savefig(out / f"{basename}.png", dpi=150, bbox_inches = "tight", transparent = False)
     plt.savefig(out / f"{basename}.eps",            bbox_inches = "tight", transparent = False)
     plt.show()
+
+#=== FUNCTIONS AND DERIVATIVES ===#
 
 #Case1: f(x) = sin(2x)
 def func_1(x) -> float:
