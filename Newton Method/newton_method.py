@@ -92,10 +92,8 @@ def func_prima_p_2(x) -> float:
 if __name__ == "__main__":
     #Plot for 1
     plot_case(funcion = func_1, funcionPrima = func_prima_1, funcionPrima2 = func_prima_p_1, a = -4, b = 4, title = "f(x) = sin(2x) , x ∈ [-4,4]",
-        legend_labels = ["f(x) = sin(2x)", "f'(x) = 2cos(2x)", "f''(x) = -4sin(2x)"], basename = "newton_method_1"
-    )
+        legend_labels = ["f(x) = sin(2x)", "f'(x) = 2cos(2x)", "f''(x) = -4sin(2x)"], basename = "newton_method_1")
 
     #Plot for 2
     plot_case(funcion = func_2, funcionPrima = func_prima_2, funcionPrima2 = func_prima_p_2, a = -5, b = 5, title = "f(x) = sin(x) + x cos(x) , x ∈ [-5,5]",
-        legend_labels = ["f(x) = sin(x) + x cos(x)", "f'(x) = 2 cos(x) - x sin(x)", "f''(x) = -3 sin(x) - x cos(x)"], basename = "newton_method_2"
-    )
+        legend_labels = ["f(x) = sin(x) + x cos(x)", "f'(x) = 2 cos(x) - x sin(x)", "f''(x) = -3 sin(x) - x cos(x)"], basename = "newton_method_2")
