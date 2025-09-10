@@ -13,13 +13,13 @@ rd.seed(1)
 np.random.seed(1)
 
 #---------- Parámetros ES ----------
-G = 100         # generaciones
-D = 2           # dimensión
-MU = 20         # μ padres
-LAMBDA = 40     # λ hijos por generación
+G = 100         #generaciones
+D = 2           #dimensión
+MU = 20         #μ padres
+LAMBDA = 40     #λ hijos por generación
 
 #---------- Funciones ----------
-def f1(x):  # dominio: [-2,2]^2
+def f1(x):  #dominio: [-2,2]^2
     return x[0] * np.exp(-(x[0]**2 + x[1]**2))
 
 def f2(x):  #dominio: [-5.12,5.12]^2
@@ -40,7 +40,7 @@ def es_mu_lambda_discreta(func, lower, upper, g=G, mu=MU, lam=LAMBDA):
         sigma = np.random.rand(D) * 0.5 + 0.05
         pobl.append({'sol': sol, 'sigma': sigma, 'fit': func(sol)})
 
-    trayectoria = [] 
+    trayectoria = []
     for _ in range(g):
         hijos = []
         for _ in range(lam):
@@ -50,7 +50,7 @@ def es_mu_lambda_discreta(func, lower, upper, g=G, mu=MU, lam=LAMBDA):
                 j = np.random.randint(0, mu)
             y  = recomb_discreta(pobl[i]['sol'],   pobl[j]['sol'])
             sg = recomb_discreta(pobl[i]['sigma'], pobl[j]['sigma'])
-            y = clip_bounds(y + np.random.normal(0.0, sg, D), lower, upper)
+            y  = clip_bounds(y + np.random.normal(0.0, sg, D), lower, upper)
             hijos.append({'sol': y, 'sigma': sg, 'fit': func(y)})
 
         hijos.sort(key=lambda d: d['fit'])  #minimización
@@ -71,16 +71,13 @@ def grafica_funcion(func, lower, upper, best, trayectoria):
     plt.ion()
     fig = plt.figure()
     ax = plt.axes(projection='3d')
-    #wireframe de la función
     ax.plot_wireframe(X0, X1, Z, rstride=6, cstride=6, cmap='viridis')
-    #trayectoria del mejor (en 2D, levantamos con f)
     if len(trayectoria) > 1:
         trajZ = np.array([func(p) for p in trayectoria])
-        ax.plot(trayectoria[:,0], trayectoria[:,1], trajZ, linewidth=2)
-    #mejor solución final
+        ax.plot(trayectoria[:, 0], trayectoria[:, 1], trajZ, linewidth=2)
     ax.scatter(best['sol'][0], best['sol'][1], best['fit'], facecolor='red', s=60)
     ax.set_xlim3d(lower[0], upper[0]); ax.set_xlabel('x0')
-    ax.set_ylim3d(upper[1], lower[1]); ax.set_ylabel('x1')  
+    ax.set_ylim3d(upper[1], lower[1]); ax.set_ylabel('x1')
     ax.set_zlabel('f(x)')
     fig.canvas.draw(); fig.canvas.flush_events()
     return fig, ax
@@ -90,17 +87,15 @@ if __name__ == "__main__":
     lower1 = np.array([-2.0, -2.0])
     upper1 = np.array([ 2.0,  2.0])
     best1, traj1 = es_mu_lambda_discreta(f1, lower1, upper1)
-    grafica_funcion(
-        f1, lower1, upper1, best1, traj1)
-
+    grafica_funcion(f1, lower1, upper1, best1, traj1)
+    print("f1 -> best x:", best1['sol'], "f:", best1['fit'])   
     #-------- f2 --------
     lower2 = np.array([-5.12, -5.12])
     upper2 = np.array([ 5.12,  5.12])
     best2, traj2 = es_mu_lambda_discreta(f2, lower2, upper2)
-    grafica_funcion(
-        f2, lower2, upper2, best2, traj2)
+    grafica_funcion(f2, lower2, upper2, best2, traj2)
+    print("f2 -> best x:", best2['sol'], "f:", best2['fit'])   
 
     #Mostrar ventanas
     plt.ioff()
     plt.show()
-    
