@@ -4,7 +4,6 @@ Evolutionary Strategies
 Metaheuristic Algorithms
 """
 
-
 import numpy as np
 import random as rd
 import matplotlib.pyplot as plt
