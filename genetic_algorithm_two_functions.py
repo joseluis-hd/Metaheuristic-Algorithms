@@ -1,6 +1,6 @@
 """
 José Luis Haro Díaz
-Genetic Algorithm
+Genetic Algorithm 
 Metaheuristic Algorithms
 """
 
@@ -9,67 +9,57 @@ import random as rd
 import copy
 import matplotlib.pyplot as plt
 
-# --------- Semillas reproducibles ---------
+# --------- Semillas ---------
 rd.seed(1)
 np.random.seed(1)
 
-# --------- Hiperparámetros GA (ajústalos libremente) ---------
-D = 2          # dimensión
-N = 40         # tamaño de población
-G = 100        # generaciones
-pm = 0.4       # probabilidad de mutación (random reset por gen)
+# --------- Hiperparámetros GA ---------
+D = 2          
+N = 40         
+G = 100        
+pm = 0.4       
 
-# --------- Funciones objetivo ---------
+# --------- Funciones ---------
 def f1(x):  # dominio: [-2,2]^2
     return x[0] * np.exp(-(x[0]**2 + x[1]**2))
 
 def f2(x):  # dominio: [-5.12,5.12]^2
     return x[0]**2 + x[1]**2
 
-# --------- GA building blocks ---------
+def clip_bounds(x, lower, upper):
+    return np.minimum(np.maximum(x, lower), upper)
+
 class Individuo:
     def __init__(self, lower, upper):
         self.sol = lower + (upper - lower) * np.random.rand(D)
         self.fx = None
         self.fit = None
-        self.prob = None
 
     def eval(self, func):
         self.fx = func(self.sol)
-        #aptitud positiva para ruleta (maximiza fit)
-        if self.fx >= 0:
-            self.fit = 1.0 / (1.0 + self.fx)
-        else:
-            self.fit = 1.0 + abs(self.fx)
+        self.fit = (1.0 / (1.0 + self.fx)) if self.fx >= 0 else (1.0 + abs(self.fx))
 
 def ruleta(pobl):
-    #calcula probabilidades normalizadas y selecciona 1 padre
-    sum_fit = sum(p.fit for p in pobl)
-    acc = 0.0
-    r = rd.random()
+    total = sum(p.fit for p in pobl)
+    r, acc = rd.random(), 0.0
     for p in pobl:
-        acc += p.fit / sum_fit
+        acc += p.fit / total
         if acc >= r:
             return copy.deepcopy(p)
     return copy.deepcopy(pobl[-1])
 
 def crossover_1p(p1, p2):
-    #cruza de un punto (vector real de tamaño D)
     pc = rd.randint(1, D-1) if D > 1 else 1
     c1, c2 = copy.deepcopy(p1), copy.deepcopy(p2)
     c1.sol[pc:], c2.sol[pc:] = p2.sol[pc:].copy(), p1.sol[pc:].copy()
     return c1, c2
 
 def mutar_random_reset(ind, lower, upper, pm):
-    #por gen: con prob pm se resetea a un valor aleatorio dentro de límites
     for j in range(D):
         if rd.random() < pm:
             ind.sol[j] = lower[j] + (upper[j] - lower[j]) * rd.random()
 
-def clip_bounds(x, lower, upper):
-    return np.minimum(np.maximum(x, lower), upper)
-
-# --------- GA principal (minimización de func) ---------
+# --------- GA principal (minimiza func) ---------
 def run_ga(func, lower, upper, gens=G, pop_size=N, p_mut=pm):
     # inicialización
     pobl = [Individuo(lower, upper) for _ in range(pop_size)]
@@ -84,7 +74,7 @@ def run_ga(func, lower, upper, gens=G, pop_size=N, p_mut=pm):
         if best is None or best_gen.fx < best.fx:
             best = copy.deepcopy(best_gen)
 
-        #selección + cruza
+        #nueva población (selección + cruza + mutación)
         nuevos = []
         while len(nuevos) < pop_size:
             p1 = ruleta(pobl)
@@ -99,54 +89,52 @@ def run_ga(func, lower, upper, gens=G, pop_size=N, p_mut=pm):
             nuevos.extend([h1, h2])
         pobl = nuevos[:pop_size]
 
+    #evaluación final y retorno
     for ind in pobl:
         ind.eval(func)
     best_final = min(pobl, key=lambda z: z.fx)
     if best_final.fx < best.fx:
         best = best_final
+
+    best.pobl_final = pobl
     return best
 
-# --------- Gráfica 3D ---------
+# --------- Gráfica 3D  ---------
 def grafica_superficie(func, lower, upper, best, title=None):
     x0 = np.linspace(lower[0], upper[0], 120)
     x1 = np.linspace(lower[1], upper[1], 120)
     X0, X1 = np.meshgrid(x0, x1)
-    grid = np.stack((X0, X1))
-    Z = func(grid)
+    Z = func(np.stack((X0, X1)))
 
-    fig = plt.figure(figsize=(7.2, 5.6))
+    fig = plt.figure(figsize=(7.4, 5.4))
     ax = plt.axes(projection='3d')
-    ax.plot_wireframe(X0, X1, Z, rstride=6, cstride=6, cmap='viridis')
-    ax.scatter(best.sol[0], best.sol[1], best.fx, s=60, facecolor='red')
+    ax.plot_wireframe(X0, X1, Z, rstride=6, cstride=6)
+
+    P  = np.array([ind.sol for ind in best.pobl_final])
+    Zp = np.array([func(p) for p in P])
+    ax.scatter(P[:,0], P[:,1], Zp, s=28, c='g', alpha=0.9)
+
+    #mejor en rojo
+    ax.scatter(best.sol[0], best.sol[1], best.fx, s=60, c='r')
+
     ax.set_xlabel("x0"); ax.set_ylabel("x1"); ax.set_zlabel("f(x)")
-    if title:
-        ax.set_title(title)
+    if title: ax.set_title(title)
     plt.tight_layout()
     return fig
 
 # --------- Ejecución para f1 y f2 ---------
 if __name__ == "__main__":
     #f1
-    lower1 = np.array([-2.0, -2.0])
-    upper1 = np.array([ 2.0,  2.0])
+    lower1 = np.array([-2.0, -2.0]); upper1 = np.array([2.0, 2.0])
     best1 = run_ga(f1, lower1, upper1)
     print(f"f1 -> best x: {best1.sol}, f: {best1.fx:.6f}")
-
-    fig1 = grafica_superficie(
-        f1, lower1, upper1, best1,
-        title=None
-    )
+    grafica_superficie(f1, lower1, upper1, best1, title=None)
 
     #f2
-    lower2 = np.array([-5.12, -5.12])
-    upper2 = np.array([ 5.12,  5.12])
+    lower2 = np.array([-5.12, -5.12]); upper2 = np.array([5.12, 5.12])
     best2 = run_ga(f2, lower2, upper2)
     print(f"f2 -> best x: {best2.sol}, f: {best2.fx:.6f}")
-
-    fig2 = grafica_superficie(
-        f2, lower2, upper2, best2,
-        title=None
-    )
+    grafica_superficie(f2, lower2, upper2, best2, title=None)
 
     plt.ioff()
     plt.show()
